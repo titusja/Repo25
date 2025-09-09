@@ -1,0 +1,12 @@
+﻿SELECT  SUBSTR(TAPDATA,112,001) AS DISHREASN,                      
+   SUBSTR(TAPDATA,113,008) AS CHDRNUM        
+   ,SUBSTR(TAPDATA,92,005) AS CONSIGNOR                                 
+   FROM      XDEVBIL.DFTAPB2306 T01                                   
+   WHERE     SUBSTR(TAPDATA,112,001) <> '0'                           
+   AND       SUBSTR(TAPDATA,092,005) IN                               
+--: Before Change
+                          ('08530', '06530', '07608', '08520')      
+--: After Change
+--                          ('08530')          
+   GROUP BY  SUBSTR(TAPDATA,112,001), SUBSTR(TAPDATA,113,008)
+            ,SUBSTR(TAPDATA,92,005)                  
