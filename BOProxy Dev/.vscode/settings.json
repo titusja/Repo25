@@ -1,0 +1,12 @@
+{
+    "java.project.referencedLibraries": [
+        "c:\\Users\\TITUS.AGUILAR\\OneDrive - Zurich APAC\\Titus\\BOProxy Dev\\jar\\jt400.jar",
+        "c:\\Users\\TITUS.AGUILAR\\OneDrive - Zurich APAC\\Titus\\BOProxy Dev\\jar\\miglayout-3.7.4-swing.jar"
+    ],
+    "java.dependency.packagePresentation": "hierarchical",
+    "java.project.sourcePaths": [
+        "BoProxy\\src",
+        "resources"
+    ],
+    "java.project.outputPath": "bin"
+}

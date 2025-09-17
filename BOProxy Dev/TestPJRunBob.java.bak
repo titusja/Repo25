@@ -1,0 +1,491 @@
+
+import java.awt.Container;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyVetoException;
+import java.util.Date;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+
+import net.miginfocom.swing.MigLayout;
+
+import com.ibm.as400.access.AS400;
+import com.ibm.as400.access.AS400Message;
+import com.ibm.as400.access.AS400Text;
+import com.ibm.as400.access.ProgramCall;
+import com.ibm.as400.access.ProgramParameter;
+
+
+private static void setUIFont(javax.swing.plaf.FontUIResource f)
+{
+    java.util.Enumeration<Object> keys = UIManager.getDefaults().keys();
+    while (keys.hasMoreElements())
+    {
+        Object key = keys.nextElement();
+        Object value = UIManager.get(key);
+        if (value instanceof javax.swing.plaf.FontUIResource)
+        {
+            UIManager.put(key, f);
+        }
+    }
+}
+
+public class TestPJRunBob implements ActionListener
+{
+       JFrame appFrame;
+       JPanel jpaControl;
+       JTextField jtfBobUserid, jtfBobMessage,
+                   jtfBobMessageOut, jtfBobReturnValue, jtfBobReturnErrorText,
+                   jtfServer, jtfSystemUserid, jtfSystemCCSID,
+                   jtfProgramLibrary, jtfProgramID;
+       
+       JTextArea jtaBobMessage, jtaBobMessageOut, jtaBobReturnErrorText, jtaFeedback;
+       
+       JPasswordField jpwSystemPassword;
+       JComboBox jcbEnvironment, jcbBobSource, jcbBobFormat, jcbBobCommit, jcbBobBranch,
+                 jcbBobObject, jcbBobMethod;       
+       JButton jbnRun, jbnClear, jbnExit;
+    
+       Container cPane;
+       
+       String EnvironmentListData[] = {"XDEV", "XACT", "XSIT", "ZUR", "TDEV", "TACT", "TSIT", "PDEV", "PACT", "VDEV", "VACT"};
+       String BobSourceListData[] = {"*RMT", "*LOC"};
+       String BobFormatListData[] = {"*BO", "*3R", "*BOL", "*XML"};
+       String BobCommitListData[] = {"*YES", "*NO"};
+       String BobBranchListData[] = {"*ZD-SIB", "*ZD-CCC"};
+       String BobObjectListData[] = {"CLT", "POL", "BNK", "CAL", "CBA", "CCA", "CCC", "CLM", "QOT", "RCT", "REQ", "RFD"};
+       String BobMethodListData[] = {"INQ", "NEW", "ADD", "AUT", "CAN", "CRT", "END", "EXP", "GET", "LPS", "MOD",  "NSD", "NSI", "NSO", "PFL","PMO","POL","PRE","PTN","QEN","RCT","RCV","REG","RNW","RPL","RPN","RPR","RVW","TFR","TKU","PEN","PEM","PED"};
+                      
+    
+   public static void main(String args[]){
+      new TestPJRunBob(); 
+   }
+
+   public TestPJRunBob()
+   {     
+    
+        createGUI();
+    
+   }
+
+       public void createGUI(){
+
+           /*Create a frame, get its contentpane and set layout*/
+           appFrame = new JFrame("Test PJ Handler Proxy (PJRUNBOB)");
+           cPane = appFrame.getContentPane();
+           cPane.setLayout(new MigLayout());
+           
+           //Arrange components on contentPane and set Action Listeners to each JButton
+        //    cPane.setFont().
+           arrangeComponents();
+           
+           appFrame.setSize(800,800);
+           appFrame.setResizable(true);
+           appFrame.setVisible(true);
+           appFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      
+       }
+       
+       public void arrangeComponents(){
+
+//    	   Configuration
+    	   jtfServer = new JTextField(10);
+    	   jtfServer.setText("JPZURI08");
+       	   jtfServer.setEditable(false);
+    	   
+    	   jtfProgramLibrary = new JTextField(10);
+    	   jtfProgramLibrary.setText("QGPL");
+       	   jtfProgramLibrary.setEditable(false);
+       	    	   
+    	   jtfProgramID = new JTextField(10);
+    	   jtfProgramID.setText("PJRUNBOBCL");
+       	   jtfProgramID.setEditable(false);
+    	   
+    	   jtfSystemCCSID = new JTextField(5);
+    	   jtfSystemCCSID.setText("5026");
+       	   jtfSystemCCSID.setEditable(false);
+    	   
+    	   jtfSystemUserid = new JTextField(10);
+    	   jtfSystemUserid.setText("JPTTAQ");
+    	   
+    	   jpwSystemPassword = new JPasswordField(10);
+    	   
+           jtfBobUserid   = new JTextField(8);
+           jtfBobUserid.setText("JPTTAQ");
+           
+           jtfBobMessage  = new JTextField(32000);
+        //    jtfBobMessage.setText("CLTZUR    0079900001          99004525                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ");
+           jtfBobMessage.setText("00000001JPTTAQ              CLT       INQ       007991YIRN0                                         CLTZUR    0079900001          99004525                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ");
+
+           jtaBobMessage  = new JTextArea();
+           jtaBobMessage.setLineWrap(true);
+           jtaBobMessage.setWrapStyleWord(true);
+           jtaBobMessage.setText("00000001JPTTAQ              CLT       INQ       007991YIRN0                                         CLTZUR    0079900001          99004525                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ");
+           
+           jtfBobMessageOut  = new JTextField(32000);
+//         jtfBobMessageOut.setEditable(false);
+           
+           jtaBobMessageOut  = new JTextArea();
+           jtaBobMessageOut.setLineWrap(true);
+           jtaBobMessageOut.setWrapStyleWord(true);
+           
+           jtfBobReturnValue  = new JTextField(100);
+//           jtfBobReturnValue.setEditable(false);
+           jtfBobReturnErrorText = new JTextField(5003);
+//           jtfBobReturnErrorText.setEditable(false);
+           jtaBobReturnErrorText = new JTextArea();
+           jtaBobReturnErrorText.setLineWrap(true);
+           jtaBobReturnErrorText.setWrapStyleWord(true);
+
+           jcbEnvironment = new JComboBox(EnvironmentListData);
+           jcbEnvironment.setEditable(true);
+           
+           jcbBobSource = new JComboBox(BobSourceListData);
+           jcbBobSource.setEditable(false);
+           
+           jcbBobFormat = new JComboBox(BobFormatListData);
+           jcbBobFormat.setEditable(false);
+           
+           jcbBobCommit = new JComboBox(BobCommitListData);
+           jcbBobCommit.setEditable(false);
+           
+           jcbBobBranch = new JComboBox(BobBranchListData);
+           jcbBobBranch.setEditable(true);
+           
+           jcbBobObject = new JComboBox(BobObjectListData);
+           jcbBobObject.setEditable(true);
+           
+           jcbBobMethod = new JComboBox(BobMethodListData);
+           jcbBobMethod.setEditable(true);
+           
+           jbnRun   = new JButton("Run");
+           jbnClear  = new JButton("Clear");
+           jbnExit    = new JButton("Exit");
+
+           cPane.add(new JLabel("iSeries(AS400) Server"));
+           cPane.add(jtfServer, "wrap");
+           cPane.add(new JLabel("Program Library"));
+           cPane.add(jtfProgramLibrary,"split");
+           cPane.add(new JLabel("Program ID"), "gap 15");
+           cPane.add(jtfProgramID,"split");
+           cPane.add(new JLabel("System CCSID"), "gap 15");
+           cPane.add(jtfSystemCCSID,"wrap");
+           
+           cPane.add(new JSeparator(),"gapy 10, growx, span 4, wrap 10");
+           cPane.add(new JLabel("Application User ID"));
+           cPane.add(jtfSystemUserid,"wrap");
+           
+           cPane.add(new JSeparator(),"gapy 10, growx, span 4, wrap 10");
+           cPane.add(new JLabel("Environment"));
+           cPane.add(jcbEnvironment, "wrap");
+           cPane.add(new JLabel("Business Object Source"));
+           cPane.add(jcbBobSource, "width 70, wrap");
+           cPane.add(new JLabel("Business Object Format"));
+           cPane.add(jcbBobFormat, "width 70, wrap");
+           cPane.add(new JLabel("Business Object Commit"));
+           cPane.add(jcbBobCommit, "width 70, wrap");
+           cPane.add(new JLabel("Business Object ID"));
+           cPane.add(jcbBobObject, "wrap");
+           cPane.add(new JLabel("Business Object Method"));
+           cPane.add(jcbBobMethod, "wrap");
+           cPane.add(new JLabel("Business Object Branch"));
+           cPane.add(jcbBobBranch, "wrap");
+           cPane.add(new JLabel("Business Object User ID"));
+           cPane.add(jtfBobUserid, "wrap");
+           cPane.add(new JLabel("Business Object Input Message"));
+//           cPane.add(jtfBobMessage, "wrap");
+           cPane.add(new JScrollPane(jtaBobMessage), "hmin 10%, growx, wrap");
+           
+           cPane.add(new JSeparator(),"gapy 10, growx, span 4, wrap 10");
+           cPane.add(new JLabel("Business Object Return Value"));
+           cPane.add(jtfBobReturnValue, "wrap");
+           cPane.add(new JLabel("Business Object Return Message"));
+//           cPane.add(jtfBobMessageOut, "wrap");
+           cPane.add(new JScrollPane(jtaBobMessageOut), "hmin 10%, growx, wrap");
+           cPane.add(new JLabel("Business Object Error Text"));
+//           cPane.add(jtfBobReturnErrorText, "wrap");
+           cPane.add(new JScrollPane(jtaBobReturnErrorText), "hmin 5%, growx, wrap");
+
+           cPane.add(new JSeparator(),"gapy 10, growx, span 4, wrap 10");
+           jpaControl = new JPanel();
+           jpaControl.add(jbnRun);
+           jpaControl.add(jbnClear);
+           jpaControl.add(jbnExit);
+           
+           cPane.add(jpaControl, "align left, wrap");
+           
+           cPane.add(new JSeparator(),"gapy 10, growx, span 4, wrap 10");
+           cPane.add(new JLabel("Feedback Area"));
+           jtaFeedback = new JTextArea();
+           jtaFeedback.setLineWrap(true);
+           jtaFeedback.setWrapStyleWord(true);
+           cPane.add(new JScrollPane(jtaFeedback), "hmin 10%, growx, wrap");
+           
+           
+           jbnRun.addActionListener(this);
+           jbnClear.addActionListener(this);
+           jbnExit.addActionListener(this);
+       }
+
+       public void actionPerformed (ActionEvent e){
+           
+           if (e.getSource () == jbnRun){
+             runTest();
+             
+             jtfBobReturnValue.setCaretPosition(0);
+             
+             jtaBobMessage.setCaretPosition(0);
+             jtaBobMessageOut.setCaretPosition(0);
+             jtaBobReturnErrorText.setCaretPosition(0);
+        }
+
+           else if (e.getSource() == jbnClear){
+            clear();
+        }
+
+           else if (e.getSource() == jbnExit){            
+               System.exit(0);
+           }
+
+       }
+//---- Clear BO message       
+       public void clear(){
+    	    
+           jtfBobMessage.setText("");
+           jtfBobMessageOut.setText("");
+           jtfBobReturnValue.setText("");
+           jtfBobReturnErrorText.setText("");
+        }
+        
+//---- Set font
+       private static void setUIFont(javax.swing.plaf.FontUIResource f) {
+            java.util.Enumeration<Object> keys = UIManager.getDefaults().keys();
+            while (keys.hasMoreElements())
+            {
+                Object key = keys.nextElement();
+                Object value = UIManager.get(key);
+                if (value instanceof javax.swing.plaf.FontUIResource)
+                {
+                    UIManager.put(key, f);
+                }
+            }
+        }           
+
+     
+//--- Call PJRUNBOB 
+       public void runTest(){  
+    	   Date d = new Date ();
+    	   long starTime =System.currentTimeMillis();
+    	   long starTime1 =0;
+    	   long starTime2 =0;
+    	   System.out.println("starTime "+starTime);
+    	   long endTime =0;
+    	   long endTime1=0;
+    	   long endTime2 =0;
+    	   int systemCCSID = 5026;
+    	   char[] systemPassword;
+    	   String strTemp;
+    	   
+    	   AS400 system = new AS400(jtfServer.getText());
+		
+//		Trace.setTraceAllOn(true);
+
+
+		try {
+			system.setUserId(jtfSystemUserid.getText());
+
+//			systemPassword = jpwSystemPassword.getPassword();
+//			strTemp = systemPassword.toString();
+//			system.setPassword(strTemp.trim());
+
+			systemCCSID = Integer.parseInt(jtfSystemCCSID.getText());
+			system.setCcsid(systemCCSID);
+			
+		} catch (PropertyVetoException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+//		try {
+//		System.out.println("CCSID: " + system.getCcsid());
+//		System.out.println("NLV: " + system.getNLV());
+//		System.out.println("UserId: " + system.getUserId());
+//		System.out.println("Version: " + system.getVersion());
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+		
+		ProgramCall program = new ProgramCall(system);
+		try {
+//			
+			String programName = "/QSYS.LIB/" +
+			                     jtfProgramLibrary.getText() + ".LIB/" + 
+			                     jtfProgramID.getText() + ".PGM"; 
+			
+			ProgramParameter[] parameterList = new ProgramParameter[13];
+			
+			AS400Text environment = new AS400Text(4);
+//			parameterList[0] = new ProgramParameter(environment.toBytes("XDEV"));
+			parameterList[0] = new ProgramParameter(environment.toBytes(EnvironmentListData[jcbEnvironment.getSelectedIndex()]));
+			
+			AS400Text source = new AS400Text(4);
+//			parameterList[1] = new ProgramParameter(source.toBytes("*RMT"));
+			parameterList[1] = new ProgramParameter(source.toBytes(BobSourceListData[jcbBobSource.getSelectedIndex()]));
+			
+			AS400Text messageFormat = new AS400Text(4);
+//			parameterList[2] = new ProgramParameter(messageFormat.toBytes("*BOL"));
+			parameterList[2] = new ProgramParameter(messageFormat.toBytes(BobFormatListData[jcbBobFormat.getSelectedIndex()]));
+			
+			AS400Text commitOption = new AS400Text(4);
+//			parameterList[3] = new ProgramParameter(commitOption.toBytes("*YES"));
+			parameterList[3] = new ProgramParameter(commitOption.toBytes(BobCommitListData[jcbBobCommit.getSelectedIndex()]));
+			
+//			AS400ZonedDecimal timeoutSeconds = new AS400ZonedDecimal(3,0);
+//			parameterList[4] = new ProgramParameter(timeoutSeconds.setUseDouble(30));
+  			AS400Text timeoutSeconds = new AS400Text(3);
+			parameterList[4] = new ProgramParameter(timeoutSeconds.toBytes("030"));
+			
+			AS400Text bobUserId = new AS400Text(8);
+//			parameterList[5] = new ProgramParameter(bobUserId.toBytes("JPTTAQ"));
+			parameterList[5] = new ProgramParameter(bobUserId.toBytes(jtfBobUserid.getText()));
+			
+			AS400Text branch = new AS400Text(10);
+// 			parameterList[6] = new ProgramParameter(branch.toBytes("*ZD-CCC"));
+ 			parameterList[6] = new ProgramParameter(branch.toBytes(BobBranchListData[jcbBobBranch.getSelectedIndex()]));
+  			
+			AS400Text bobObj = new AS400Text(3);
+// 			parameterList[7] = new ProgramParameter(bobObj.toBytes("QOT"));
+  			parameterList[7] = new ProgramParameter(bobObj.toBytes(BobObjectListData[jcbBobObject.getSelectedIndex()]));
+			
+			AS400Text bobMethod = new AS400Text(3);
+// 			parameterList[8] = new ProgramParameter(bobMethod.toBytes("NEW"));
+  			parameterList[8] = new ProgramParameter(bobMethod.toBytes(BobMethodListData[jcbBobMethod.getSelectedIndex()]));
+			
+			AS400Text boInputMsg = new AS400Text(32000, systemCCSID);
+//     		parameterList[9] = new ProgramParameter(boInputMsg.toBytes("QOTHEAD   0018300001                                                         91219     NWD                                                                                                      NN               1493QOTZAP    0035100001          20110529A00   0001YNBNWD20110529057000E V6013000000U19540128NN2066                                       0000000 000000000000000000002000B01NN  Y100000000 001001 003000 3                     00000000000000000000000000000000000000000000000000000000000000043420110401  0000000031000043  01P00000099999999     000000 19����                RK1            QOTZAP    0035100001          20110529A00   0001YNBNWD20110529057000E V6013000000U19540128NN2066                                      410003202051000000000000000002000B01NN  Y100000000 001001 003000 3                     00000000000000000000000000000000000000000000000000000000000000043420110401  0000000031000043  01P00000099999999     000000 19����                RK1            QOTZAP    0035100001          20110529A00   0001YNBNWD20110529057000E V6013000000U19540128NY2066                                      410003201051000000000000000002000B01NN  Y100000000 001001 003000 3                     00000000000000000000000000000000000000000000000000000000000000043420110401  0000000031000043  01P00000099999999     000000 19����                RK1            "));
+//     		parameterList[9] = new ProgramParameter(boInputMsg.toBytes(jtfBobMessage.getText()));
+  		//  parameterList[9] = new ProgramParameter(boInputMsg.toBytes(jtaBobMessage.getText()));
+     		parameterList[9] = new ProgramParameter(boInputMsg.toBytes(jtaBobMessage.getText().substring(100)));
+
+			
+			parameterList[10] = new ProgramParameter(100);
+			parameterList[11] = new ProgramParameter(5003);
+			parameterList[12] = new ProgramParameter(32000);
+			
+			program.setProgram(programName, parameterList);
+			System.out.println("before run");
+			System.out.println("parameter[0]=" + EnvironmentListData[jcbEnvironment.getSelectedIndex()]);
+			System.out.println("parameter[1]=" + BobSourceListData[jcbBobSource.getSelectedIndex()]);
+			System.out.println("parameter[2]=" + BobFormatListData[jcbBobFormat.getSelectedIndex()]);
+			System.out.println("parameter[3]=" + BobCommitListData[jcbBobCommit.getSelectedIndex()]);
+			System.out.println("parameter[4]=" + "030");
+			System.out.println("parameter[5]=" + jtfBobUserid.getText());
+			System.out.println("parameter[6]=" + BobBranchListData[jcbBobBranch.getSelectedIndex()]);
+			System.out.println("parameter[7]=" + BobObjectListData[jcbBobObject.getSelectedIndex()]);
+			System.out.println("parameter[8]=" + BobMethodListData[jcbBobMethod.getSelectedIndex()]);
+			System.out.println("parameter[9]=" + jtaBobMessage.getText());
+			
+	        
+        	starTime1 =System.currentTimeMillis();
+        	
+			if (program.run() != true)
+	        {
+	            // Report failure.
+	            System.out.println("Program failed!");
+	            // Show the messages.
+	            AS400Message[] messagelist = program.getMessageList();
+	            for (int i = 0; i < messagelist.length; ++i)
+	            {
+	                // Show each message.0
+	                System.out.println(messagelist[i]);
+	            }
+	        }
+	        // Else no error, get output data.
+	        else
+	        {
+	            endTime1 =System.currentTimeMillis();
+	        	System.out.println("Run = true");
+	        	AS400Text retval = new AS400Text(100);
+	        	AS400Text retvalError = new AS400Text(5003);
+	        	AS400Text boOutputMsg = new AS400Text(32000, systemCCSID);
+	        	
+//	            System.out.println(retval.toObject(parameterList[10].getOutputData()));
+//	            retval.toObject(parameterList[10].getOutputData());
+	            jtfBobReturnValue.setText((String) retval.toObject(parameterList[10].getOutputData()));
+	        	
+//	            System.out.println(retvalError.toObject(parameterList[11].getOutputData()));
+//	            retvalError.toObject(parameterList[11].getOutputData());
+	            strTemp = (String) retvalError.toObject(parameterList[11].getOutputData());
+//	            jtfBobReturnErrorText.setText(strTemp.trim());
+	            jtaBobReturnErrorText.setText(strTemp.trim());
+	            
+	            System.out.println(jtaBobReturnErrorText.getText());
+	            
+//	            System.out.println(boOutputMsg.toObject(parameterList[12].getOutputData()));
+//	            boOutputMsg.toObject(parameterList[12].getOutputData());
+	            strTemp = (String) boOutputMsg.toObject(parameterList[12].getOutputData());
+	            jtaBobMessageOut.setText(strTemp.trim());
+	            System.out.println(jtaBobMessageOut.getText());
+	            
+				System.out.println("starTime1 "+starTime1);
+	            System.out.println("endTime1 "+endTime1);
+	            System.out.println("Time taken 1: "+(endTime1-starTime1));
+	            System.out.println("Runtime Classpath=" + System.getProperty("java.classpath"));
+	        }
+/*			
+        	starTime2 =System.currentTimeMillis();
+			if (program.run() != true)
+	        {
+				
+	            // Report failure.
+	            System.out.println("Program failed!");
+	            // Show the messages.
+	            AS400Message[] messagelist = program.getMessageList();
+	            for (int i = 0; i < messagelist.length; ++i)
+	            {
+	                // Show each message.0
+	                System.out.println(messagelist[i]);
+	            }	            
+	    		
+	            
+	        }
+	        // Else no error, get output data.
+	        else
+	        {
+//	        	starTime2 =System.currentTimeMillis();
+	            endTime2 =System.currentTimeMillis();
+	        	System.out.println("Run = true");
+	        	AS400Text retval = new AS400Text(100);
+	        	AS400Text retvalError = new AS400Text(5003);
+	        	AS400Text boOutputMsg = new AS400Text(32000);
+	        	
+	            System.out.println(retval.toObject(parameterList[10].getOutputData()));
+	            System.out.println(retvalError.toObject(parameterList[11].getOutputData()));
+	            System.out.println(boOutputMsg.toObject(parameterList[12].getOutputData()));
+				System.out.println("starTime2 "+starTime2);
+	            System.out.println("endTime2 "+endTime2);
+	            System.out.println("Time taken 2: "+(endTime2-starTime2));
+	        }
+*/			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		endTime =System.currentTimeMillis();
+		system.disconnectAllServices();
+		System.out.println("endTime "+endTime);
+		System.out.println("Time taken: "+(endTime-starTime));
+     }
+
+}
+
